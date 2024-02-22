@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "fdd-defense"
+version = "0.0.1"
+description = "Defense of adversarial attacks on FDD models"
+authors = ["AIRI, Industrial AI"]
+license = "MIP"
+
+[tool.poetry.dependencies]
+torch = "*"
+pandas = "*"
+scikit-learn = "*"
+tqdm = "*"
+fddbenchmark = { git = "https://github.com/airi-industrial-ai/fddbenchmark.git" }
+catboost = "1.1.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
