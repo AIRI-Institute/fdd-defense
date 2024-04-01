@@ -17,7 +17,7 @@ attackers = {'NoiseAttacker': NoiseAttacker, 'FGSMAttacker': FGSMAttacker,
 
 defenders = {'AdversarialTrainingDefender': AdversarialTrainingDefender, 'DistillationDefender': DistillationDefender,
              'QuantizationDefender': QuantizationDefender, 'RegularizationDefender': RegularizationDefender,
-             'DefensiveAutoencoderDefender': AutoEncoderDefender, 'NoDefenceDefender': NoDefenceDefender}
+             'DefensiveAutoencoderDefender': MLPAutoEncoderDefender, 'NoDefenceDefender': NoDefenceDefender}
 
 
 def parse_args():
