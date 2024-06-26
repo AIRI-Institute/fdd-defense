@@ -1,12 +1,13 @@
 import numpy as np
 from fdd_defense.defenders.base import BaseDefender
+from fdd_defense.attackers import FGSMAttacker
 from fdd_defense.utils import weight_reset
 from tqdm.auto import trange, tqdm
 import torch
 from torch.optim import Adam
 
 
-class QuantizationDefender(BaseDefender):
+class ATQDefender(BaseDefender):
     def __init__(self, model, qbit=8):
         super().__init__(model)
         self.qbit = qbit
@@ -14,18 +15,27 @@ class QuantizationDefender(BaseDefender):
         self.max = model.dataset.df[model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
+        self.attacker = FGSMAttacker(model, eps=0.1)
         
-        print('Quantization training...')
+        print('ATQ training...')
         self.model.model.apply(weight_reset)
         self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
         self.model.model.train()
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
+                batch_size = ts.shape[0]
+                adv_ts = self.attacker.attack(ts, label)
                 label = torch.LongTensor(label).to(self.model.device)
                 ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
-                logits = self.model.model(ts)
-                loss = self.model.loss_fn(logits, label)
+                adv_ts = torch.FloatTensor(self.quantize(adv_ts)).to(self.model.device)
+                _ts = torch.cat([ts, adv_ts])
+                _logits = self.model.model(_ts)
+                logits = _logits[:batch_size]
+                adv_logits = _logits[batch_size:]
+                real_loss = self.model.loss_fn(logits, label)
+                adv_loss = self.model.loss_fn(adv_logits, label)
+                loss = real_loss + adv_loss
                 self.model.optimizer.zero_grad()
                 loss.backward()
                 self.model.optimizer.step()

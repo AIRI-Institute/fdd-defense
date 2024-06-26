@@ -26,6 +26,7 @@ class DistillationDefender(BaseDefender):
         assert issubclass(type(model), BaseTorchModel), "Distillation is applicable to neural networks only"
         
         self.model.model.apply(weight_reset)
+        self.model.model.train()
         self.student = deepcopy(model)
         loss_fn = CrossEntropyLoss(temp)
         num_states = len(set(self.model.dataset.label))

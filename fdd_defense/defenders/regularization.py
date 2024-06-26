@@ -14,6 +14,7 @@ class RegularizationDefender(BaseDefender):
         super().__init__(model)
         self.lambd = lambd
         self.model.model.apply(weight_reset)
+        self.model.model.train()
         self.regularization = regularization
         self.h = h
 

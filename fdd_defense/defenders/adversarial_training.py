@@ -4,16 +4,18 @@ from fdd_defense.attackers import FGSMAttacker
 from fdd_defense.utils import weight_reset
 from tqdm.auto import tqdm, trange
 import torch
+from torch.optim import Adam
 
 
 class AdversarialTrainingDefender(BaseDefender):
     def __init__(self, model, attacker=None, lambd=1):
         super().__init__(model)
         if attacker is None:
-            attacker = FGSMAttacker(model, eps=0.01)
+            attacker = FGSMAttacker(model, eps=0.1)
         self.attacker = attacker
         self.lambd = lambd
         self.model.model.apply(weight_reset)
+        self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
 
         print('Adversarial training...')
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
