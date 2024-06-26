@@ -3,7 +3,8 @@ from .quantization import QuantizationDefender
 from .distillation import DistillationDefender
 from .adversarial_training import AdversarialTrainingDefender
 from .regularization import RegularizationDefender
-from .autoencoder import MLPAutoEncoderDefender
+from .autoencoder import AutoEncoderDefender
+from .atonquant import ATQDefender
 
 __all__ = [
     'NoDefenceDefender',
@@ -11,5 +12,6 @@ __all__ = [
     'DistillationDefender',
     'AdversarialTrainingDefender',
     'RegularizationDefender',
-    'MLPAutoEncoderDefender',
+    'AutoEncoderDefender',
+    'ATQDefender'
 ]
