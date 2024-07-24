@@ -17,9 +17,9 @@ pip install git+https://github.com/AIRI-Institute/fdd-defense.git
 
 ```python
 from fdd_defense.models import MLP
-from fdd_defense.attackers import FGSMAttacker
-from fdd_defense.defenders import AdversarialTrainingDefender
-from fdd_defense.utils import evaluate
+from fdd_defense.attackers import NoAttacker, FGSMAttacker
+from fdd_defense.defenders import NoDefenceDefender, AdversarialTrainingDefender
+from fdd_defense.utils import accuracy
 from fddbenchmark import FDDDataset
 from sklearn.preprocessing import StandardScaler
 
@@ -40,22 +40,22 @@ model = MLP(
 model.fit(dataset)
 
 # Test the FDD model on original data without defense
+attacker = NoAttacker(model, eps=0.05)
 defender = NoDefenceDefender(model)
-attacker = NoAttacker(model, eps=epsilon)
-accuracy = evaluate(defender, attacker)
-print(f'Accuracy: {accuracy:.4f}')
+acc = accuracy(attacker, defender, step_size=1)
+print(f'Accuracy: {acc:.4f}')
 
 # Test the FDD model under FGSM attack without defense
+attacker = FGSMAttacker(model, eps=0.05)
 defender = NoDefenceDefender(model)
-attacker = FGSMAttacker(defender, eps=epsilon)
-accuracy = evaluate(defender, attacker)
-print(f'Accuracy: {accuracy:.4f}')
+acc = accuracy(attacker, defender, step_size=1)
+print(f'Accuracy: {acc:.4f}')
 
 # Test the FDD model under FGSM attack with Adversarial Training defense
-defender = AdversarialTrainingDefender(model)
-attacker = FGSMAttacker(defender, eps=epsilon)
-accuracy = evaluate(defender, attacker)
-print(f'Accuracy: {accuracy:.4f}')
+attacker = FGSMAttacker(model, eps=0.05)
+defender = AdversarialTrainingDefender(model, attacker)
+acc = accuracy(attacker, defender, step_size=1)
+print(f'Accuracy: {acc:.4f}')
 
 ```
 
