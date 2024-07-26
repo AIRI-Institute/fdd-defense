@@ -86,7 +86,7 @@ print(f'Accuracy: {acc:.4f}')
 | Defense method          | Reference |
 |-------------------------|-----------|
 | Adversarial training    |Goodfellow, Ian J., Jonathon Shlens, and Christian Szegedy. "Explaining and harnessing adversarial examples." arXiv preprint arXiv:1412.6572 (2014).|
-| Data quantization       |Guo, Chuan, et al. "Countering adversarial images using input transformations." arXiv preprint arXiv:1711.00117 (2017).|
+| Data quantization       |Xu, Weilin, David Evans, and Yanjun Qi. "Feature squeezing: Detecting adversarial examples in deep neural networks." arXiv preprint arXiv:1704.01155 (2017).|
 | Gradient regularization |Finlay, Chris, and Adam M. Oberman. "Scaleable input gradient regularization for adversarial robustness." Machine Learning with Applications 3 (2021): 100017.|
 | Defensive distillation  |Papernot, Nicolas, et al. "Distillation as a defense to adversarial perturbations against deep neural networks." 2016 IEEE symposium on security and privacy (SP). IEEE, 2016.| 
 | ATQ  |Pozdnyakov, Vitaliy, et al. "Adversarial Attacks and Defenses in Fault Detection and Diagnosis: A Comprehensive Benchmark on the Tennessee Eastman Process." IEEE Open Journal of the Industrial Electronics Society (2024).| 
