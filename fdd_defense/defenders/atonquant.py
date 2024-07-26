@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from fdd_defense.defenders.base import BaseDefender
 from fdd_defense.attackers import FGSMAttacker
 from fdd_defense.utils import weight_reset
@@ -15,17 +16,18 @@ class ATQDefender(BaseDefender):
         self.max = model.dataset.df[model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
-        self.attacker = FGSMAttacker(model, eps=0.1)
+        self.eps = np.linspace(1e-6, 0.3, 20)
         
         print('ATQ training...')
         self.model.model.apply(weight_reset)
-        self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
         self.model.model.train()
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
+                epsilon = random.choice(self.eps)
+                attacker = FGSMAttacker(model, eps=epsilon)
                 batch_size = ts.shape[0]
-                adv_ts = self.attacker.attack(ts, label)
+                adv_ts = attacker.attack(ts, label)
                 label = torch.LongTensor(label).to(self.model.device)
                 ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
                 adv_ts = torch.FloatTensor(self.quantize(adv_ts)).to(self.model.device)
