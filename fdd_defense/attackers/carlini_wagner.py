@@ -75,7 +75,7 @@ def f(logits, target, device):
     """
     f objective function from the paper.
     """
-    one_hot_label = torch.eye(logits.shape[1])[target].to(device)
+    one_hot_label = torch.eye(logits.shape[1]).to(device)[target]
     # find the max logit other than the target class
     other = torch.amax((1-one_hot_label)*logits, dim=1)
     # get the target class's logit

@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from fdd_defense.defenders.base import BaseDefender
-from fdd_defense.attackers import FGSMAttacker
+from fdd_defense.attackers import FGSMAttacker, PGDAttacker
 from fdd_defense.utils import weight_reset
 from tqdm.auto import trange, tqdm
 import torch
@@ -25,7 +25,7 @@ class ATQDefender(BaseDefender):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
                 epsilon = random.choice(self.eps)
-                attacker = FGSMAttacker(model, eps=epsilon)
+                attacker = PGDAttacker(model, eps=epsilon)
                 batch_size = ts.shape[0]
                 adv_ts = attacker.attack(ts, label)
                 label = torch.LongTensor(label).to(self.model.device)
