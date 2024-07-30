@@ -8,58 +8,7 @@ from tqdm.auto import tqdm, trange
 from fdd_defense.defenders.base import BaseDefender
 
 
-class SelectItem(nn.Module):
-    def __init__(self, item_index):
-        super(SelectItem, self).__init__()
-        self._name = 'selectitem'
-        self.item_index = item_index
-
-    def forward(self, inputs):
-        return inputs[self.item_index]
-
-
-class GRUGenerator(nn.Module):
-    def __init__(
-            self,
-            num_sensors: int,
-            window_size: int,
-            noise_size: int = 256):
-        self.num_sensors = num_sensors
-        self.window_size = window_size
-        self.noise_size = noise_size
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.GRU(self.noise_size, 128, num_layers=1, batch_first=True),
-            SelectItem(0),
-            nn.Linear(128, self.num_sensors),
-        )
-
-    def forward(self, x):
-        return self.model(x)
-
-
-class GRUDiscriminator(nn.Module):
-    def __init__(
-            self,
-            num_sensors: int,
-            window_size: int):
-        super().__init__()
-        self.num_sensors = num_sensors
-        self.window_size = window_size
-        self.model = nn.Sequential(
-            nn.GRU(num_sensors, 128, num_layers=1, batch_first=True),
-            SelectItem(0),
-            nn.Linear(128, 128),
-            nn.Flatten(),
-            nn.Linear(128 * self.window_size, 1),
-            nn.Sigmoid(),
-        )
-
-    def forward(self, x):
-        return self.model(x)
-
-
-class MLPGenerator(nn.Module):
+class Generator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
@@ -83,7 +32,7 @@ class MLPGenerator(nn.Module):
         return self.model(x).view(-1, self.window_size, self.num_sensors)
 
 
-class MLPDiscriminator(nn.Module):
+class Discriminator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
@@ -107,14 +56,14 @@ class MLPDiscriminator(nn.Module):
 
 class DefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=10, optim_steps=200,
-                 optim_lr=0.01, mode="MLP", save_loss_history=False):
+                 optim_lr=0.01, save_loss_history=False):
         super().__init__(model)
         self.random_restarts = random_restarts
         self.optim_steps = optim_steps
         self.optim_lr = optim_lr
 
         self.noise_len = 100
-        self.mode = mode
+
         self.device = self.model.device
 
         self.train_gan(save_loss_history)
@@ -126,14 +75,8 @@ class DefenseGanDefender(BaseDefender):
         window_size = self.model.window_size  # expected 10
         num_sensors = self.model.dataset.df.shape[1]
 
-        if self.mode == "MLP":
-            G = MLPGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
-            D = MLPDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
-        elif self.mode == "GRU":
-            G = GRUGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
-            D = GRUDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
-        else:
-            raise ValueError("mode must be 'MLP' or 'GRU'")
+        G = Generator(num_sensors=num_sensors, window_size=window_size).to(self.device)
+        D = Discriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
 
         num_epochs = 300
         learning_rate = 1e-4
