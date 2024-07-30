@@ -8,7 +8,54 @@ from tqdm.auto import tqdm, trange
 from fdd_defense.defenders.base import BaseDefender
 
 
-class Generator(nn.Module):
+# GRU MOMENT
+class GRUGenerator(nn.Module):
+    def __init__(
+            self,
+            num_sensors: int,
+            window_size: int,
+            noise_size: int = 256,
+            ):
+        self.num_sensors = num_sensors
+        self.window_size = window_size
+        self.noise_size = noise_size
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.GRU(self.noise_size, 128, num_layers=1, batch_first=True),
+            SelectItem(0),
+            nn.Linear(128, self.num_sensors),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+    
+    def generate(self, size):
+        return self.__call__(torch.randn((size, self.window_size, self.noise_size), device=DEVICE))
+
+
+class GRUDiscriminator(nn.Module):
+    def __init__(
+            self,
+            num_sensors: int,
+            window_size: int,
+            ):
+        super().__init__()
+        self.num_sensors = num_sensors
+        self.window_size = window_size
+        self.model = nn.Sequential(
+            nn.GRU(num_sensors, 128, num_layers=1, batch_first=True),
+            SelectItem(0),
+            nn.Linear(128, 128),
+            nn.Flatten(),
+            nn.Linear(128 * self.window_size, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+class MLPGenerator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
@@ -33,7 +80,7 @@ class Generator(nn.Module):
         return self.__call__(z)
 
 
-class Discriminator(nn.Module):
+class MLPDiscriminator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
@@ -56,8 +103,9 @@ class Discriminator(nn.Module):
 
 class DefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=10, optim_steps=200,
-                 optim_lr=0.01, save_loss_history=False):
+                 optim_lr=0.01, save_loss_history=False, mode="MLP"):
         super().__init__(model)
+        # TODO ("MLP", "GRU") in mode else raise Exception
         self.random_restarts = random_restarts
         self.optim_steps = optim_steps
         self.optim_lr = optim_lr
@@ -75,9 +123,9 @@ class DefenseGanDefender(BaseDefender):
         window_size = self.model.window_size  # expected 10
         num_sensors = self.model.dataset.df.shape[1]
 
-        gen = Generator(num_sensors, window_size,
+        gen = MLPGenerator(num_sensors, window_size,
                         noise_size=self.noise_len).to(self.device)
-        discr = Discriminator(num_sensors, window_size).to(self.device)
+        discr = MLPDiscriminator(num_sensors, window_size).to(self.device)
 
         gen_optimizer = RMSprop(gen.parameters(), lr=2e-6, maximize=True)
         discr_optimizer = RMSprop(discr.parameters(), lr=2e-6)
