@@ -55,7 +55,7 @@ class Discriminator(nn.Module):
 
 
 class DefenseGanDefender(BaseDefender):
-    def __init__(self, model, random_restarts=10, optim_steps=200,
+    def __init__(self, model, random_restarts=10, optim_steps=1000,
                  optim_lr=0.01, save_loss_history=False):
         super().__init__(model)
         self.random_restarts = random_restarts
