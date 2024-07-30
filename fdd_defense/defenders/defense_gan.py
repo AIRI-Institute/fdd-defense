@@ -9,6 +9,7 @@ from fdd_defense.defenders.base import BaseDefender
 class DefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=10, optim_steps=200):
         super().__init__(model)
+        self.device = self.model.device
 
     def generate_similar(self, x: torch.Tensor) -> np.ndarray:
         # (H, W) -> (H, W)
