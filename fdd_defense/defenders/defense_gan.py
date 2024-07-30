@@ -154,16 +154,16 @@ class DefenseGanDefender(BaseDefender):
 
         noise = torch.randn(size=(self.random_restarts, self.noise_len),
                             device=self.device, requires_grad=True)
+        optimizer = Adam([noise], lr=1e-3)
 
         for optim_step in range(self.optim_steps):
             generated_data = self.generator(noise)
             dist = (generated_data - x).square().mean(dim=(1, 2))
             loss = dist.sum()
-            noise.grad = None
+            optimizer.zero_grad()
             loss.backward()
-            with torch.no_grad():
-                noise -= self.optim_lr * noise.grad
-
+            optimizer.step()
+        
         noise.requires_grad_(False)
         generated_data = self.generator(noise)
         dist = (generated_data - x).square().mean(dim=(1, 2))
