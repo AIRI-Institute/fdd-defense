@@ -4,11 +4,20 @@ import torch.nn.functional as F
 from torch import nn
 from torch.optim import RMSprop
 from tqdm.auto import tqdm, trange
-
 from fdd_defense.defenders.base import BaseDefender
 
 
 # GRU MOMENT
+class SelectItem(nn.Module):
+    def __init__(self, item_index):
+        super(SelectItem, self).__init__()
+        self._name = 'selectitem'
+        self.item_index = item_index
+
+    def forward(self, inputs):
+        return inputs[self.item_index]
+
+
 class GRUGenerator(nn.Module):
     def __init__(
             self,
@@ -28,7 +37,7 @@ class GRUGenerator(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
     def generate(self, size):
         return self.__call__(torch.randn((size, self.window_size, self.noise_size), device=DEVICE))
 
@@ -55,6 +64,7 @@ class GRUDiscriminator(nn.Module):
         return self.model(x)
 
 
+# MLP MOMENT
 class MLPGenerator(nn.Module):
     def __init__(
             self,
