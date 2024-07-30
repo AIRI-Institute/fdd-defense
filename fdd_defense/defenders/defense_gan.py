@@ -4,10 +4,10 @@ import torch.nn.functional as F
 from torch import nn
 from torch.optim import RMSprop
 from tqdm.auto import tqdm, trange
+
 from fdd_defense.defenders.base import BaseDefender
 
 
-# GRU MOMENT
 class SelectItem(nn.Module):
     def __init__(self, item_index):
         super(SelectItem, self).__init__()
@@ -23,8 +23,7 @@ class GRUGenerator(nn.Module):
             self,
             num_sensors: int,
             window_size: int,
-            noise_size: int = 256,
-            ):
+            noise_size: int = 256):
         self.num_sensors = num_sensors
         self.window_size = window_size
         self.noise_size = noise_size
@@ -38,16 +37,12 @@ class GRUGenerator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-    def generate(self, size):
-        return self.__call__(torch.randn((size, self.window_size, self.noise_size), device=DEVICE))
-
 
 class GRUDiscriminator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
-            window_size: int,
-            ):
+            window_size: int):
         super().__init__()
         self.num_sensors = num_sensors
         self.window_size = window_size
@@ -64,30 +59,28 @@ class GRUDiscriminator(nn.Module):
         return self.model(x)
 
 
-# MLP MOMENT
 class MLPGenerator(nn.Module):
     def __init__(
             self,
             num_sensors: int,
             window_size: int,
-            noise_size: int = 100):
+            noise_size: int = 256):
         self.num_sensors = num_sensors
         self.window_size = window_size
         self.noise_size = noise_size
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(self.noise_size, 256),
-            nn.LeakyReLU(),
+            nn.Linear(100, 256),
+            nn.LeakyReLU(True),
+            nn.Linear(256, 256),
+            nn.LeakyReLU(True),
+            nn.Linear(256, 256),
+            nn.LeakyReLU(True),
             nn.Linear(256, self.num_sensors * self.window_size),
-            nn.LayerNorm(self.num_sensors * self.window_size),
         )
 
     def forward(self, x):
         return self.model(x).view(-1, self.window_size, self.num_sensors)
-
-    def generate(self, size, device):
-        z = torch.randn((size, self.noise_size), device=device)
-        return self.__call__(z)
 
 
 class MLPDiscriminator(nn.Module):
@@ -100,9 +93,10 @@ class MLPDiscriminator(nn.Module):
         self.window_size = window_size
         self.model = nn.Sequential(
             nn.Flatten(),
-            nn.BatchNorm1d(self.num_sensors * self.window_size),
             nn.Linear(self.num_sensors * self.window_size, 256),
-            nn.LeakyReLU(),
+            nn.ReLU(True),
+            nn.Linear(256, 256),
+            nn.ReLU(True),
             nn.Linear(256, 1),
             nn.Sigmoid(),
         )
@@ -113,15 +107,14 @@ class MLPDiscriminator(nn.Module):
 
 class DefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=10, optim_steps=200,
-                 optim_lr=0.01, save_loss_history=False, mode="MLP"):
+                 optim_lr=0.01, mode="MLP", save_loss_history=False):
         super().__init__(model)
-        # TODO ("MLP", "GRU") in mode else raise Exception
         self.random_restarts = random_restarts
         self.optim_steps = optim_steps
         self.optim_lr = optim_lr
 
         self.noise_len = 100
-
+        self.mode = mode
         self.device = self.model.device
 
         self.train_gan(save_loss_history)
@@ -133,56 +126,83 @@ class DefenseGanDefender(BaseDefender):
         window_size = self.model.window_size  # expected 10
         num_sensors = self.model.dataset.df.shape[1]
 
-        gen = MLPGenerator(num_sensors, window_size,
-                        noise_size=self.noise_len).to(self.device)
-        discr = MLPDiscriminator(num_sensors, window_size).to(self.device)
+        if self.mode == "MLP":
+            G = MLPGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
+            D = MLPDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
+        elif self.mode == "GRU":
+            G = GRUGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
+            D = GRUDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
+        else:
+            raise ValueError("mode must be 'MLP' or 'GRU'")
 
-        gen_optimizer = RMSprop(gen.parameters(), lr=2e-6, maximize=True)
-        discr_optimizer = RMSprop(discr.parameters(), lr=2e-6)
+        num_epochs = 300
+        learning_rate = 1e-4
 
-        discr_steps = 5
+        G_losses = []
+        D_losses = []
+        iters = 0
 
-        discr_loss = []
-        gen_loss = []
-        num_epochs = 5
+        latent_size = 100  # (10, 10)
+        batch_size = 512
+
+        desc_steps = 1
+
+        optim_G = torch.optim.AdamW(G.parameters(), lr=learning_rate)
+        optim_D = torch.optim.RMSprop(D.parameters(), lr=learning_rate)
+
+        criterion = nn.BCELoss()
+
         for epoch in trange(num_epochs, desc='Epochs ...'):
-            for true_data, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                # MINIMIZE DISCRIMINATOR
-                true_data = torch.Tensor(true_data).to(self.device)
-                batch_size = len(true_data)
-                discr.train()
-                gen.eval()
-                for discr_step in range(discr_steps):
-                    with torch.no_grad():
-                        fake_data = gen.generate(batch_size, self.device)
+            for (data, _, _) in tqdm(self.model.dataloader, desc='Steps ...',
+                                     leave=False):
 
-                    pred = discr(fake_data).squeeze()
-                    loss = F.binary_cross_entropy(pred, torch.zeros(batch_size, device=self.device))
+                # 1. Обучим D: max log(D(x)) + log(1 - D(G(z)))
+                D.train()
 
-                    pred = discr(true_data).squeeze()
-                    loss += F.binary_cross_entropy(pred, torch.ones(batch_size, device=self.device))
+                for _ in range(desc_steps):
+                    D.zero_grad()
+                    data = torch.Tensor(data).to(self.device)
+                    batch_size = len(data)
+                    pred = D(data).view(-1)
+                    true = torch.ones(batch_size).to(self.device)
+                    loss_data = criterion(pred, true)
+                    loss_data.backward()
 
-                    discr_loss.append(loss.item())
-                    discr_optimizer.zero_grad()
-                    loss.backward()
-                    discr_optimizer.step()
+                    z = torch.randn(batch_size, latent_size).to(self.device)
+                    out = G(z)
+                    pred = D(out.detach()).view(-1)
+                    true = torch.zeros(batch_size).to(self.device)
+                    loss_z = criterion(pred, true)
+                    loss_z.backward()
 
-                gen.train()
-                discr.eval()
-                # MAXIMIZE GENERATOR
-                fake_data = gen.generate(batch_size, self.device).to(self.device)
-                pred = discr(fake_data).squeeze()
-                loss = F.binary_cross_entropy(pred, torch.zeros(batch_size, device=self.device))
-                gen_loss.append(loss.item())
+                    D_loss = loss_z + loss_data
 
-                gen_optimizer.zero_grad()
+                    optim_D.step()
+
+                # 2. Обучим G: max log(D(G(z)))
+                G.train()
+                G.zero_grad()
+
+                D.eval()
+
+                true = torch.ones(batch_size).to(self.device)
+                pred = D(out).view(-1)
+                loss = criterion(pred, true)
                 loss.backward()
-                gen_optimizer.step()
 
-        self.generator = gen
+                G_loss = loss
+
+                optim_G.step()
+
+                D_losses.append(D_loss.item())
+                G_losses.append(G_loss.item())
+
+                iters += 1
+
+        self.generator = G
         if save_loss_history:
-            self.gen_loss = gen_loss
-            self.discr_loss = discr_loss
+            self.gen_loss = G_losses
+            self.discr_loss = D_losses
         self.generator.eval()
         self.generator.requires_grad_(False)
 
