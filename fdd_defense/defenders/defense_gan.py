@@ -260,7 +260,7 @@ class GRUDefenseGanDefender(BaseDefender):
         G = GRUGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
         D = GRUDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
 
-        num_epochs = 1 # TODO
+        num_epochs = 100
         learning_rate = 1e-4
 
         G_losses = []
@@ -324,7 +324,6 @@ class GRUDefenseGanDefender(BaseDefender):
         if save_loss_history:
             self.gen_loss = G_losses
             self.discr_loss = D_losses
-        #self.generator.eval()
         self.generator.requires_grad_(False)
 
     def generate_similar(self, x: torch.Tensor) -> np.ndarray:
@@ -332,12 +331,10 @@ class GRUDefenseGanDefender(BaseDefender):
 
         noise = torch.randn(size=(self.random_restarts, self.model.window_size, self.noise_len),
                             device=self.device, requires_grad=True)
-        optimizer = Adam([noise], lr=1e-3)
-        #print(noise.shape)
+        optimizer = Adam([noise], lr=self.optim_lr)
 
         for optim_step in range(self.optim_steps):
             generated_data = self.generator(noise)
-            #print(generated_data.shape)
             dist = (generated_data - x).square().mean(dim=(1, 2))
             loss = dist.sum()
             optimizer.zero_grad()
