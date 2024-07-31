@@ -235,10 +235,9 @@ class GRUDiscriminator(nn.Module):
 
 
 
-
 class GRUDefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=1, optim_steps=1000,
-                 optim_lr=1e-3, save_loss_history=False):
+                 optim_lr=1e-3, save_loss_history=False, num_epochs=100):
         super().__init__(model)
         self.random_restarts = random_restarts
         self.optim_steps = optim_steps
@@ -247,6 +246,8 @@ class GRUDefenseGanDefender(BaseDefender):
         self.noise_len = 256
 
         self.device = self.model.device
+        
+        self.num_epochs = num_epochs
 
         self.train_gan(save_loss_history)
 
@@ -260,7 +261,6 @@ class GRUDefenseGanDefender(BaseDefender):
         G = GRUGenerator(num_sensors=num_sensors, window_size=window_size).to(self.device)
         D = GRUDiscriminator(num_sensors=num_sensors, window_size=window_size).to(self.device)
 
-        num_epochs = 100
         learning_rate = 1e-4
 
         G_losses = []
@@ -277,7 +277,7 @@ class GRUDefenseGanDefender(BaseDefender):
 
         criterion = nn.BCELoss()
 
-        for epoch in trange(num_epochs, desc='Epochs ...'):
+        for epoch in trange(self.num_epochs, desc='Epochs ...'):
             for (data, _, _) in tqdm(self.model.dataloader, desc='Steps ...',
                                      leave=False):
 
