@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.optim import RMSprop, Adam
+from torch.optim import Adam
 from tqdm.auto import tqdm, trange
 
 from fdd_defense.defenders.base import BaseDefender
@@ -163,7 +163,7 @@ class DefenseGanDefender(BaseDefender):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        
+
         noise.requires_grad_(False)
         generated_data = self.generator(noise)
         dist = (generated_data - x).square().mean(dim=(1, 2))
@@ -179,7 +179,7 @@ class DefenseGanDefender(BaseDefender):
         return self.model.predict(np.stack(approximations))
 
 
-
+# GRU version
 
 class SelectItem(nn.Module):
     def __init__(self, item_index):
@@ -189,8 +189,8 @@ class SelectItem(nn.Module):
 
     def forward(self, inputs):
         return inputs[self.item_index]
-    
-    
+
+
 class GRUGenerator(nn.Module):
     def __init__(
             self,
@@ -234,7 +234,6 @@ class GRUDiscriminator(nn.Module):
         return self.model(x)
 
 
-
 class GRUDefenseGanDefender(BaseDefender):
     def __init__(self, model, random_restarts=1, optim_steps=1000,
                  optim_lr=1e-3, save_loss_history=False, num_epochs=100):
@@ -246,7 +245,7 @@ class GRUDefenseGanDefender(BaseDefender):
         self.noise_len = 256
 
         self.device = self.model.device
-        
+
         self.num_epochs = num_epochs
 
         self.train_gan(save_loss_history)
@@ -267,15 +266,12 @@ class GRUDefenseGanDefender(BaseDefender):
         D_losses = []
         iters = 0
 
-        latent_size = 256  # (10, 10)
         batch_size = 512
 
         desc_steps = 3
 
         optim_G = torch.optim.RMSprop(G.parameters(), lr=9 * learning_rate)
         optim_D = torch.optim.RMSprop(D.parameters(), lr=learning_rate)
-
-        criterion = nn.BCELoss()
 
         for epoch in trange(self.num_epochs, desc='Epochs ...'):
             for (data, _, _) in tqdm(self.model.dataloader, desc='Steps ...',
@@ -291,7 +287,6 @@ class GRUDefenseGanDefender(BaseDefender):
                         z = torch.randn((batch_size, window_size, self.noise_len), device=self.device)
                         fake_data = G(z)
 
-                                
                     pred_fake = D(fake_data).squeeze()
                     loss_fake = F.binary_cross_entropy(pred_fake, torch.zeros(batch_size, device=self.device))
 
@@ -305,14 +300,14 @@ class GRUDefenseGanDefender(BaseDefender):
 
                     optim_G.zero_grad()
                     optim_D.step()
-                    
+
                 z = torch.randn((batch_size, window_size, self.noise_len), device=self.device)
                 fake_data = G(z)
                 pred = D(fake_data).squeeze()
                 loss = F.binary_cross_entropy(pred, torch.zeros(batch_size, device=self.device))
 
                 # 2. Обучим G: max log(D(G(z)))
-                
+
                 optim_G.zero_grad()
                 loss.backward()
                 optim_D.zero_grad()
@@ -340,7 +335,7 @@ class GRUDefenseGanDefender(BaseDefender):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        
+
         noise.requires_grad_(False)
         generated_data = self.generator(noise)
         dist = (generated_data - x).square().mean(dim=(1, 2))
