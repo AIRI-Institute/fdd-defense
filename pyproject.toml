@@ -11,7 +11,8 @@ pandas = "*"
 scikit-learn = "*"
 tqdm = "*"
 fddbenchmark = { git = "https://github.com/airi-industrial-ai/fddbenchmark.git" }
-catboost = "1.1.1"
+catboost = "1.2.5"
+numpy = "< 2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
