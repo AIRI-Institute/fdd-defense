@@ -93,7 +93,7 @@ print(f'Accuracy: {acc:.4f}')
 
 ## Testing
 
-To test the library, run the command `pytest tests` from the root directory.
+To test the library, run the command `pytest fdd_defense/tests` from the root directory.
 
 ## Running experiments
 
