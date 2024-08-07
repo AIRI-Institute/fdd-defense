@@ -81,9 +81,9 @@ class ResidualBlock(nn.Module):
             dilation=(dilation_base**nr_blocks_below),
         )
         if weight_norm:
-            self.conv1, self.conv2 = nn.utils.weight_norm(
+            self.conv1, self.conv2 = nn.utils.parametrizations.weight_norm(
                 self.conv1
-            ), nn.utils.weight_norm(self.conv2)
+            ), nn.utils.parametrizations.weight_norm(self.conv2)
 
         if input_dim != output_dim:
             self.conv3 = nn.Conv1d(input_dim, output_dim, 1)

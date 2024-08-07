@@ -93,7 +93,11 @@ print(f'Accuracy: {acc:.4f}')
 
 ## Testing
 
-To test the library, run the command `pytest tests` from the root directory.
+To test the library, run the command `pytest fdd_defense/tests` from the root directory.
+
+## Running experiments
+
+To reproduce the results from the paper, open the notebook [experiments.ipynb](experiments.ipynb) and follow the instructions.
 
 ## Citation
 

@@ -34,7 +34,11 @@ class TestOnSmallTEP:
         np.random.seed(0)
         fddmodel = MLP(window_size=10, step_size=1, is_test=True)
         fddmodel.fit(self.dataset)
-        fdd_attacker = attacker(fddmodel, eps=self.eps)
+        if attacker is attackers.DistillationBlackBoxAttacker:
+            base_attacker = attackers.FGSMAttacker(fddmodel, eps=self.eps)
+            fdd_attacker = attacker(fddmodel, eps=self.eps, student=fddmodel, base_attack=base_attacker)
+        else:
+            fdd_attacker = attacker(fddmodel, eps=self.eps)
         adv_ts = fdd_attacker.attack(self.ts, self.label)
         eps = self.ts - adv_ts
         assert abs(eps).max() < self.eps + 1e-10
