@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from torch.optim import Adam
 from tqdm.auto import tqdm, trange
+import copy
 
 
 class DistillationBlackBoxAttacker(BaseAttacker):
@@ -11,11 +12,20 @@ class DistillationBlackBoxAttacker(BaseAttacker):
             self, 
             model: object, 
             eps: float,
-            student: object,
-            base_attack: str
+            student: object=None,
         ):
         super().__init__(model, eps)
-        self.student = student
+        if student is None:
+            student = model
+        self.student = copy.deepcopy(student)
+        self.attacker = FGSMAttacker(model=self.student, eps=self.eps)
+    
+    def attack(self, ts, label):
+        super().attack(ts, label)
+        adv_ts = self.attacker.attack(ts, label)
+        return adv_ts
+
+    def fit(self):
         self.student.fit(self.model.dataset)
         self.student.model.train()
         self.student.model.to(self.model.device)
@@ -34,10 +44,3 @@ class DistillationBlackBoxAttacker(BaseAttacker):
                 self.optimizer.step()
                 losses.append(loss.item())
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
-        self.attacker = FGSMAttacker(model=self.student, eps=eps)
-        
-    
-    def attack(self, ts, label):
-        super().attack(ts, label)
-        adv_ts = self.attacker.attack(ts, label)
-        return adv_ts

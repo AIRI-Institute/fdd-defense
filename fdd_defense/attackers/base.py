@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import copy
 
 class BaseAttacker(ABC):
     """A base class of the attack.
@@ -29,7 +30,7 @@ class BaseAttacker(ABC):
         """
         assert eps > 0
         self.eps = eps
-        self.model = model
+        self.model = copy.deepcopy(model)
     
     @abstractmethod
     def attack(self, ts: np.ndarray, label: np.ndarray) -> np.ndarray:
@@ -43,4 +44,7 @@ class BaseAttacker(ABC):
             label: np.ndarray
                 label of sensor data of the shape (batch size, )
         """
+        pass
+    
+    def fit(self):
         pass
