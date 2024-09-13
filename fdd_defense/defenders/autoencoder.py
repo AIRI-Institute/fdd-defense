@@ -83,11 +83,13 @@ class AutoEncoderDefender(BaseDefender, ABC):
             MLPDecoder(num_sensors, window_size)
         )
         self.autoencoder.to(self.model.device)
+        self.num_epochs = num_epochs
     
+    def fit(self):
         self.optimizer = Adam(self.autoencoder.parameters(), lr=self.lr)
         self.autoencoder.train()
         print('Autoencoder training...')
-        for e in trange(num_epochs, desc='Epochs ...'):
+        for e in trange(self.num_epochs, desc='Epochs ...'):
             losses = []
             for batch, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
                 batch_ = torch.FloatTensor(batch).to(self.model.device)

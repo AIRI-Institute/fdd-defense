@@ -28,9 +28,11 @@ class DistillationDefender(BaseDefender):
         self.model.model.apply(weight_reset)
         self.model.model.train()
         self.student = deepcopy(model)
-        loss_fn = CrossEntropyLoss(temp)
-        num_states = len(set(self.model.dataset.label))
+        self.temp = temp
 
+    def fit(self):
+        loss_fn = CrossEntropyLoss(self.temp)
+        num_states = len(set(self.model.dataset.label))
         print('Training a teacher...')
         optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
         for e in trange(self.model.num_epochs, desc='Epochs ...'):

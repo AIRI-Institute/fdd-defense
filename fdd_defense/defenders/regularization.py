@@ -17,7 +17,8 @@ class RegularizationDefender(BaseDefender):
         self.model.model.train()
         self.regularization = regularization
         self.h = h
-
+    
+    def fit(self):
         print('Regularization training...')
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []

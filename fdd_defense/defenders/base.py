@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
 import numpy as np
-
+import copy
 
 class BaseDefender(ABC):  
     @abstractmethod
     def __init__(self, model: object):
-        self.model = model
+        self.model = copy.deepcopy(model)
+        pass
+
+    def fit(self):
         pass
     
     def predict(self, ts: np.ndarray):

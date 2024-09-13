@@ -14,6 +14,8 @@ class AdversarialTrainingDefender(BaseDefender):
             attacker = FGSMAttacker(model, eps=0.1)
         self.attacker = attacker
         self.lambd = lambd
+    
+    def fit(self):
         self.model.model.apply(weight_reset)
         self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
 

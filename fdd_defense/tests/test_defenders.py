@@ -34,5 +34,6 @@ class TestOnSmallTEP:
         fddmodel = MLP(window_size=10, step_size=1, is_test=True)
         fddmodel.fit(self.dataset)
         fdd_defender = defender(fddmodel)
+        fdd_defender.fit()
         pred = fdd_defender.predict(self.ts)
         assert pred.shape == self.label.shape
