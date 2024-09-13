@@ -82,10 +82,13 @@ class BaseTorchModel(BaseModel, ABC):
     
     def fit(self, dataset):
         super().fit(dataset=dataset)
-        num_states = len(set(self.dataset.label))
+        num_sensors = dataset.df.shape[1]
+        num_states = len(set(dataset.label))
         weight = torch.ones(num_states, device=self.device) * 0.5
         weight[1:] /= num_states
         self.loss_fn = nn.CrossEntropyLoss(weight=weight)
+        self._create_model(num_sensors, num_states)
+        self._train_nn()
 
     def __call__(self, ts: torch.Tensor):
         return self.model(ts)

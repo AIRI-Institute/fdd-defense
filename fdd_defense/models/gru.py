@@ -42,10 +42,7 @@ class GRU(BaseTorchModel):
         self.num_layers = num_layers
         self.dropout = dropout
 
-    def fit(self, dataset):
-        super().fit(dataset)
-        num_sensors = self.dataset.df.shape[1]
-        num_states = len(set(self.dataset.label))
+    def _create_model(self, num_sensors, num_states):
         self.model = _GRUModule(
             num_sensors, 
             num_states, 
@@ -53,4 +50,3 @@ class GRU(BaseTorchModel):
             self.num_layers, 
             self.dropout
         )
-        super()._train_nn()

@@ -18,14 +18,10 @@ class MLP(BaseTorchModel):
         )
         self.hidden_dim = hidden_dim
 
-    def fit(self, dataset):
-        super().fit(dataset)
-        num_sensors = self.dataset.df.shape[1]
-        num_states = len(set(self.dataset.label))
+    def _create_model(self, num_sensors, num_states):
         self.model = nn.Sequential(
             nn.Flatten(),
             nn.Linear(num_sensors * self.window_size, self.hidden_dim),
             nn.ReLU(),
             nn.Linear(self.hidden_dim, num_states),
         )
-        super()._train_nn()

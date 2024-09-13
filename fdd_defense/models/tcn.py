@@ -226,10 +226,7 @@ class TCN(BaseTorchModel):
         self.dropout = dropout
 
 
-    def fit(self, dataset):
-        super().fit(dataset)
-        num_sensors = self.dataset.df.shape[1]
-        num_states = len(set(self.dataset.label))
+    def _create_model(self, num_sensors, num_states):
         self.model = TCNModule(
             input_size=num_sensors,
             kernel_size=self.kernel_size,
@@ -240,4 +237,3 @@ class TCN(BaseTorchModel):
             target_size=num_states,
             dropout=self.dropout
         )
-        super()._train_nn()
