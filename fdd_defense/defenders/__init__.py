@@ -13,5 +13,5 @@ __all__ = [
     'AdversarialTrainingDefender',
     'RegularizationDefender',
     'AutoEncoderDefender',
-    'ATQDefender'
+    'ATQDefender',
 ]

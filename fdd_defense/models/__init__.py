@@ -9,5 +9,5 @@ __all__ = [
     'GRU',
     'LinearModel',
     'MLP',
-    "TCN",
+    'TCN',
 ]

@@ -13,4 +13,5 @@ __all__ = [
     'CarliniWagnerAttacker',
     'DeepFoolAttacker',
     'NoAttacker',
+    'DistillationBlackBoxAttacker',
 ]
