@@ -37,3 +37,20 @@ class TestOnSmallTEP:
         fdd_defender.fit()
         pred = fdd_defender.predict(self.ts)
         assert pred.shape == self.label.shape
+
+    @pytest.mark.parametrize("defender", fdd_defenders)
+    def test_loading(self, defender):
+        torch.manual_seed(0)
+        np.random.seed(0)
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        fddmodel.fit(self.dataset)
+        fdd_defender = defender(fddmodel)
+        fdd_defender.fit()
+        torch.save(fdd_defender.model.model.state_dict(), 'weights.pt')
+        fdd_defender = defender(fddmodel)
+        fdd_defender.model.model.load_state_dict(
+            torch.load('weights.pt', weights_only=True)
+        )
+        pred = fdd_defender.predict(self.ts)
+        assert pred.shape == self.label.shape
+
