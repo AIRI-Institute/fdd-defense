@@ -5,7 +5,10 @@ from fddbenchmark import FDDDataset, FDDDataloader, FDDEvaluator
 
 from fdd_defense.models import MLP, GRU, TCN
 from fdd_defense.attackers import *
-from fdd_defense.defenders import *
+from fdd_defense.defenders import (
+    AdversarialTrainingDefender, DistillationDefender, QuantizationDefender, 
+    RegularizationDefender, AutoEncoderDefender, NoDefenceDefender
+)
 
 
 models = {'MLP': MLP, 'GRU': GRU, 'TCN': TCN}
@@ -17,7 +20,7 @@ attackers = {'NoiseAttacker': NoiseAttacker, 'FGSMAttacker': FGSMAttacker,
 
 defenders = {'AdversarialTrainingDefender': AdversarialTrainingDefender, 'DistillationDefender': DistillationDefender,
              'QuantizationDefender': QuantizationDefender, 'RegularizationDefender': RegularizationDefender,
-             'DefensiveAutoencoderDefender': MLPAutoEncoderDefender, 'NoDefenceDefender': NoDefenceDefender}
+             'DefensiveAutoencoderDefender': AutoEncoderDefender, 'NoDefenceDefender': NoDefenceDefender}
 
 
 def parse_args():
