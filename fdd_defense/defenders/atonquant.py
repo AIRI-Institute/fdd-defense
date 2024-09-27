@@ -13,12 +13,12 @@ class ATQDefender(BaseDefender):
         super().__init__(model)
         self.qbit = qbit
         self.eps = np.linspace(1e-6, 0.3, 20)
-        
-    def fit(self):
         self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
         self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
+        
+    def fit(self):
         print('ATQ training...')
         self.model.model.apply(weight_reset)
         self.model.model.train()
