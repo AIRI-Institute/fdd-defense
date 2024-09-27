@@ -68,7 +68,7 @@ class AutoEncoderDefender(BaseDefender, ABC):
             lr=0.001,
             training_attacker=None,
             adv_coeff=1,
-            num_epochs=10,
+            num_epochs=None,
             bottleneck_size=3
             ):
         super().__init__(model)
@@ -83,6 +83,8 @@ class AutoEncoderDefender(BaseDefender, ABC):
             MLPDecoder(num_sensors, window_size)
         )
         self.autoencoder.to(self.model.device)
+        if num_epochs is None:
+            num_epochs = model.num_epochs
         self.num_epochs = num_epochs
     
     def fit(self):

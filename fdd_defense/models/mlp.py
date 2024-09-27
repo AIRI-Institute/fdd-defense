@@ -19,6 +19,8 @@ class MLP(BaseTorchModel):
         self.hidden_dim = hidden_dim
 
     def _create_model(self, num_sensors, num_states):
+        self.num_sensors = num_sensors
+        self.num_states = num_states
         self.model = nn.Sequential(
             nn.Flatten(),
             nn.Linear(num_sensors * self.window_size, self.hidden_dim),

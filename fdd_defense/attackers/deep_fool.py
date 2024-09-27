@@ -19,7 +19,7 @@ class DeepFoolAttacker(BaseAttacker):
         all_rows = range(len(x))
         x0 = x.clone()
         r_final = torch.zeros_like(x)
-        num_classes = len(set(self.model.dataset.label))
+        num_classes = self.model.num_states
         self.model.model.train()
         for _ in range(self.num_steps):
             grads = []

@@ -10,13 +10,12 @@ class QuantizationDefender(BaseDefender):
     def __init__(self, model, qbit=8):
         super().__init__(model)
         self.qbit = qbit
-        
-    def fit(self):
         self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
         self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
-    
+        
+    def fit(self):
         print('Quantization training...')
         self.model.model.apply(weight_reset)
         self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)

@@ -43,6 +43,8 @@ class GRU(BaseTorchModel):
         self.dropout = dropout
 
     def _create_model(self, num_sensors, num_states):
+        self.num_sensors = num_sensors
+        self.num_states = num_states
         self.model = _GRUModule(
             num_sensors, 
             num_states, 

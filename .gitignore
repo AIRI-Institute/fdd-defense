@@ -4,3 +4,4 @@
 data/*
 .ipynb_checkpoints/
 catboost_info/*
+weights.pt
