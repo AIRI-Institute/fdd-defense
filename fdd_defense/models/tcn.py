@@ -227,8 +227,6 @@ class TCN(BaseTorchModel):
 
 
     def _create_model(self, num_sensors, num_states):
-        self.num_sensors = num_sensors
-        self.num_states = num_states
         self.model = TCNModule(
             input_size=num_sensors,
             kernel_size=self.kernel_size,

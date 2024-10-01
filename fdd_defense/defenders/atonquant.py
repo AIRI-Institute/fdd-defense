@@ -1,20 +1,21 @@
 import numpy as np
 import random
 from fdd_defense.defenders.base import BaseDefender
-from fdd_defense.attackers import FGSMAttacker, PGDAttacker
+from fdd_defense.attackers import PGDAttacker
 from fdd_defense.utils import weight_reset
 from tqdm.auto import trange, tqdm
 import torch
-from torch.optim import Adam
 
 
 class ATQDefender(BaseDefender):
-    def __init__(self, model, qbit=8):
+    def __init__(self, model, qbit=8, min=None, max=None):
         super().__init__(model)
         self.qbit = qbit
         self.eps = np.linspace(1e-6, 0.3, 20)
-        self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
-        self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
+        if min is None:
+            self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
+        if max is None:
+            self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
         

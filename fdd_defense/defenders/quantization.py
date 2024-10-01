@@ -7,11 +7,13 @@ from torch.optim import Adam
 
 
 class QuantizationDefender(BaseDefender):
-    def __init__(self, model, qbit=8):
+    def __init__(self, model, qbit=8, min=None, max=None):
         super().__init__(model)
         self.qbit = qbit
-        self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
-        self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
+        if min is None:
+            self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
+        if max is None:
+            self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
         self.min = self.min[None, None, :]
         self.max = self.max[None, None, :]
         
@@ -40,7 +42,7 @@ class QuantizationDefender(BaseDefender):
         scale[scale == 0] = 1
         batch_scaled = (batch - self.min) / scale
         def_batch = np.floor(batch_scaled * 2**self.qbit) / 2**self.qbit
-        def_batch = def_batch * scale +  self.min
+        def_batch = def_batch * scale + self.min
         return def_batch
 
     def predict(self, batch: np.ndarray):
