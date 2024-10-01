@@ -11,11 +11,11 @@ class QuantizationDefender(BaseDefender):
         super().__init__(model)
         self.qbit = qbit
         if min is None:
-            self.min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
+            min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
         if max is None:
-            self.max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
-        self.min = self.min[None, None, :]
-        self.max = self.max[None, None, :]
+            max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
+        self.min = min[None, None, :]
+        self.max = max[None, None, :]
         
     def fit(self):
         print('Quantization training...')
