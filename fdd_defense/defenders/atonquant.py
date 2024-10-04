@@ -13,9 +13,9 @@ class ATQDefender(BaseDefender):
         self.qbit = qbit
         self.eps = np.linspace(1e-6, 0.3, 20)
         if min is None:
-            min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
+            min = np.zeros(self.model.num_sensors)
         if max is None:
-            max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
+            max = np.ones(self.model.num_sensors)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         

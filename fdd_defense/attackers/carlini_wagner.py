@@ -21,11 +21,15 @@ class CarliniWagnerAttacker(BaseAttacker):
             eps: float, 
             num_steps: int=5,
             lr: float=0.01,
+            min=None,
+            max=None,
         ):
         super().__init__(model, eps)
-        _min = self.model.dataset.df[self.model.dataset.train_mask].values.min()
-        _max = self.model.dataset.df[self.model.dataset.train_mask].values.max()
-        self.bounds = [_min, _max]
+        if min is None:
+            min = 0
+        if max is None:
+            max = 1
+        self.bounds = [min, max]
         self.num_steps = num_steps
         self.lr = lr
 

@@ -11,9 +11,9 @@ class QuantizationDefender(BaseDefender):
         super().__init__(model)
         self.qbit = qbit
         if min is None:
-            min = self.model.dataset.df[self.model.dataset.train_mask].values.min(axis=0)
+            min = np.zeros(self.model.num_sensors)
         if max is None:
-            max = self.model.dataset.df[self.model.dataset.train_mask].values.max(axis=0)
+            max = np.ones(self.model.num_sensors)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         

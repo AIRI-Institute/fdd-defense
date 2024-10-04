@@ -76,7 +76,7 @@ class AutoEncoderDefender(BaseDefender, ABC):
         self.loss = nn.MSELoss(reduction='mean')
         self.lr = lr
         self.adv_coeff = adv_coeff
-        num_sensors = self.model.dataset.df.shape[1]
+        num_sensors = self.model.num_sensors
         window_size = self.model.window_size
         self.autoencoder = nn.Sequential(
             MLPEncoder(num_sensors, window_size, bottleneck_size),
