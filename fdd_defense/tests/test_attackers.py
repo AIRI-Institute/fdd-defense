@@ -39,3 +39,23 @@ class TestOnSmallTEP:
         adv_ts = fdd_attacker.attack(self.ts, self.label)
         eps = self.ts - adv_ts
         assert abs(eps).max() < self.eps + 1e-10
+    
+    @pytest.mark.parametrize("attacker", fdd_attackers)
+    def test_loading(self, attacker):
+        torch.manual_seed(0)
+        np.random.seed(0)
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        fddmodel.fit(self.dataset)
+        fdd_attacker = attacker(fddmodel, eps=self.eps)
+        fdd_attacker.fit()
+        torch.save(fdd_attacker.model.model.state_dict(), 'weights.pt')
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        num_sensors, num_states = self.dataset.df.shape[1], len(set(self.dataset.label))
+        fddmodel.create_model(num_sensors, num_states)
+        fdd_attacker = attacker(fddmodel, eps=self.eps)
+        fdd_attacker.model.model.load_state_dict(
+            torch.load('weights.pt', weights_only=True)
+        )
+        adv_ts = fdd_attacker.attack(self.ts, self.label)
+        eps = self.ts - adv_ts
+        assert abs(eps).max() < self.eps + 1e-10

@@ -47,6 +47,9 @@ class TestOnSmallTEP:
         fdd_defender = defender(fddmodel)
         fdd_defender.fit()
         torch.save(fdd_defender.model.model.state_dict(), 'weights.pt')
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        num_sensors, num_states = self.dataset.df.shape[1], len(set(self.dataset.label))
+        fddmodel.create_model(num_sensors, num_states)
         fdd_defender = defender(fddmodel)
         fdd_defender.model.model.load_state_dict(
             torch.load('weights.pt', weights_only=True)
