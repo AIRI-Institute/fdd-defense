@@ -27,20 +27,20 @@ class DistillationDefender(BaseDefender):
         
         self.model.model.apply(weight_reset)
         self.model.model.train()
-        self.student = deepcopy(model)
+        self.teacher = deepcopy(model)
         self.temp = temp
 
     def fit(self):
         loss_fn = CrossEntropyLoss(self.temp)
-        num_states = len(set(self.model.dataset.label))
+        num_states = len(set(self.teacher.dataset.label))
         print('Training a teacher...')
-        optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
-        for e in trange(self.model.num_epochs, desc='Epochs ...'):
+        optimizer = Adam(self.teacher.model.parameters(), lr=self.model.lr)
+        for e in trange(self.teacher.num_epochs, desc='Epochs ...'):
             losses = []
-            for ts, _, _label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                ts = torch.FloatTensor(ts).to(self.model.device)
-                label = F.one_hot(torch.LongTensor(_label), num_states).to(self.model.device)
-                logits = self.model.model(ts)
+            for ts, _, _label in tqdm(self.teacher.dataloader, desc='Steps ...', leave=False):
+                ts = torch.FloatTensor(ts).to(self.teacher.device)
+                label = F.one_hot(torch.LongTensor(_label), num_states).to(self.teacher.device)
+                logits = self.teacher.model(ts)
                 loss = loss_fn(logits, label)
                 optimizer.zero_grad()
                 loss.backward()
@@ -52,23 +52,23 @@ class DistillationDefender(BaseDefender):
 
         
         print('Training a student...')
-        optimizer = Adam(self.student.model.parameters(), lr=self.student.lr)
-        for e in trange(self.student.num_epochs, desc='Epochs ...'):
+        optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
+        for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
-            for ts, _, _ in tqdm(self.student.dataloader, desc='Steps ...', leave=False):
-                ts = torch.FloatTensor(ts).to(self.student.device)
+            for ts, _, _ in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
+                ts = torch.FloatTensor(ts).to(self.model.device)
                 with torch.no_grad():
                     label = self.model.model(ts)
                 label = F.softmax(label, dim=1)
-                logits = self.student.model(ts)
+                logits = self.model.model(ts)
                 loss = loss_fn(logits, label)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 losses.append(loss.item())
-                if self.student.is_test:
+                if self.model.is_test:
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
 
     def predict(self, ts: np.ndarray):
-        return self.student.predict(ts)
+        return self.model.predict(ts)
