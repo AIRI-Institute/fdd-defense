@@ -1,6 +1,8 @@
 import numpy as np
 from fddbenchmark import FDDDataloader
 from tqdm.auto import tqdm
+from torch import nn
+
 
 def weight_reset(model):
     """
@@ -9,6 +11,7 @@ def weight_reset(model):
     reset_parameters = getattr(model, "reset_parameters", None)
     if callable(reset_parameters):
         model.reset_parameters()
+
 
 def accuracy(attacker, defender, step_size):
     test_loader = FDDDataloader(

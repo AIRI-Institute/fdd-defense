@@ -5,6 +5,7 @@ from .adversarial_training import AdversarialTrainingDefender
 from .regularization import RegularizationDefender
 from .autoencoder import AutoEncoderDefender
 from .atonquant import ATQDefender
+from .defense_gan import DefenseGanDefender, GRUDefenseGanDefender
 
 __all__ = [
     'NoDefenceDefender',
@@ -13,5 +14,7 @@ __all__ = [
     'AdversarialTrainingDefender',
     'RegularizationDefender',
     'AutoEncoderDefender',
-    'ATQDefender'
+    'ATQDefender',
+    'DefenseGanDefender',
+    'GRUDefenseGanDefender',
 ]
