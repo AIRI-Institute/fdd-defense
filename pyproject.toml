@@ -10,7 +10,7 @@ torch = "*"
 pandas = "*"
 scikit-learn = "*"
 tqdm = "*"
-fddbenchmark = { git = "https://github.com/airi-industrial-ai/fddbenchmark.git" }
+fddbenchmark = { git = "https://github.com/AIRI-Institute/fddbenchmark.git" }
 catboost = "1.2.5"
 numpy = "< 2.0"
 
