@@ -17,7 +17,6 @@ class Boosting(BaseModel):
         self.iterations = iterations
 
     def fit(self, dataset: FDDDataset):
-        super().fit(dataset)
         dataloader = FDDDataloader(
             dataset.df,
             dataset.train_mask,

@@ -16,7 +16,7 @@ class BaseModel(ABC):
 
     @abstractmethod
     def fit(self, dataset: FDDDataset):
-        self.dataset = dataset
+        pass
     
     @abstractmethod
     def predict(self, ts: np.ndarray) -> np.ndarray:
@@ -67,7 +67,6 @@ class BaseTorchModel(BaseModel, ABC):
         return logits.argmax(axis=1).cpu().numpy()
     
     def fit(self, dataset):
-        super().fit(dataset=dataset)
         num_sensors, num_states = dataset.df.shape[1], len(set(dataset.label))
         self.create_model(num_sensors, num_states)
         self.prepare_training(dataset)
@@ -85,6 +84,7 @@ class BaseTorchModel(BaseModel, ABC):
         self.model.to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=self.lr)
 
+        self.dataset = dataset
         self.dataloader = FDDDataloader(
             dataset.df,
             dataset.train_mask,
