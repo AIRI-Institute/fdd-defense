@@ -41,7 +41,7 @@ class RegularizationDefender(BaseDefender):
         page 13
         """
 
-        num_states = len(set(self.model.dataset.label))
+        num_states = self.model.num_states
         weight = torch.ones(num_states, device=self.model.device) * 0.5
         weight[1:] /= 20
         ce_loss = nn.CrossEntropyLoss(weight=weight, reduction='none')
