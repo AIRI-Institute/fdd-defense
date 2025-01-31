@@ -41,21 +41,7 @@ class BaseTorchModel(BaseModel, ABC):
         self.num_epochs = num_epochs
         self.device = device
 
-    def _train_nn(self):
-        self.model.train()
-        self.model.to(self.device)
-        self.optimizer = Adam(self.model.parameters(), lr=self.lr)
-
-        self.dataloader = FDDDataloader(
-            self.dataset.df,
-            self.dataset.train_mask,
-            self.dataset.label,
-            window_size=self.window_size,
-            step_size=self.step_size,
-            use_minibatches=True,
-            batch_size=self.batch_size,
-            shuffle=True,
-        )
+    def train_nn(self):
         for e in trange(self.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.dataloader, desc='Steps ...', leave=False):
@@ -83,12 +69,9 @@ class BaseTorchModel(BaseModel, ABC):
     def fit(self, dataset):
         super().fit(dataset=dataset)
         num_sensors, num_states = dataset.df.shape[1], len(set(dataset.label))
-        self.num_sensors, self.num_states = num_sensors, num_states
-        weight = torch.ones(num_states, device=self.device) * 0.5
-        weight[1:] /= num_states
-        self.loss_fn = nn.CrossEntropyLoss(weight=weight)
-        self._create_model(num_sensors, num_states)
-        self._train_nn()
+        self.create_model(num_sensors, num_states)
+        self.prepare_training(dataset)
+        self.train_nn()
 
     def create_model(self, num_sensors, num_states):
         self.num_sensors, self.num_states = num_sensors, num_states
@@ -96,6 +79,22 @@ class BaseTorchModel(BaseModel, ABC):
         weight[1:] /= num_states
         self.loss_fn = nn.CrossEntropyLoss(weight=weight)
         self._create_model(num_sensors, num_states)
+
+    def prepare_training(self, dataset):
+        self.model.train()
+        self.model.to(self.device)
+        self.optimizer = Adam(self.model.parameters(), lr=self.lr)
+
+        self.dataloader = FDDDataloader(
+            dataset.df,
+            dataset.train_mask,
+            dataset.label,
+            window_size=self.window_size,
+            step_size=self.step_size,
+            use_minibatches=True,
+            batch_size=self.batch_size,
+            shuffle=True,
+        )
 
     def __call__(self, ts: torch.Tensor):
         return self.model(ts)
