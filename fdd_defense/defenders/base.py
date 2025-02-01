@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import numpy as np
 import copy
+import torch
 
 class BaseDefender(ABC):  
     @abstractmethod
@@ -11,8 +11,9 @@ class BaseDefender(ABC):
     def fit(self):
         pass
     
-    def predict(self, ts: np.ndarray):
-        return self.model.predict(ts)
+    def predict(self, ts):
+        with torch.no_grad():
+            return self.model.predict(ts)
 
-    def get_grad(self, ts: np.ndarray, label: np.ndarray):
+    def get_grad(self, ts, label):
         return self.model.get_grad(ts, label)

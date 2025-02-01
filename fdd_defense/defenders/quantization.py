@@ -1,4 +1,3 @@
-import numpy as np
 from fdd_defense.defenders.base import BaseDefender
 from fdd_defense.utils import weight_reset
 from tqdm.auto import trange, tqdm
@@ -11,9 +10,9 @@ class QuantizationDefender(BaseDefender):
         super().__init__(model)
         self.qbit = qbit
         if min is None:
-            min = np.zeros(self.model.num_sensors)
+            min = torch.zeros(self.model.num_sensors)
         if max is None:
-            max = np.ones(self.model.num_sensors)
+            max = torch.ones(self.model.num_sensors)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         
@@ -25,8 +24,9 @@ class QuantizationDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                label = torch.LongTensor(label).to(self.model.device)
-                ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
+                #label = torch.LongTensor(label).to(self.model.device)
+                #ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
+                ts = self.quantize(ts)
                 logits = self.model.model(ts)
                 loss = self.model.loss_fn(logits, label)
                 self.model.optimizer.zero_grad()
@@ -37,14 +37,14 @@ class QuantizationDefender(BaseDefender):
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
         
-    def quantize(self, batch: np.ndarray):
+    def quantize(self, batch: torch.Tensor):
         scale = (self.max - self.min)
         scale[scale == 0] = 1
         batch_scaled = (batch - self.min) / scale
-        def_batch = np.floor(batch_scaled * 2**self.qbit) / 2**self.qbit
+        def_batch = torch.floor(batch_scaled * 2**self.qbit) / 2**self.qbit
         def_batch = def_batch * scale + self.min
         return def_batch
 
-    def predict(self, batch: np.ndarray):
+    def predict(self, batch: torch.Tensor):
         def_batch = self.quantize(batch)
         return self.model.predict(def_batch)

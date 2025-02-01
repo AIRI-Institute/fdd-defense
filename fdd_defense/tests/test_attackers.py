@@ -22,6 +22,7 @@ class TestOnSmallTEP:
             step_size=1, 
             use_minibatches=True, 
             batch_size=10,
+            data_framework='torch',
         )
         for ts, _, label in dataloader:
             break
@@ -36,9 +37,10 @@ class TestOnSmallTEP:
         fddmodel.fit(self.dataset)
         fdd_attacker = attacker(fddmodel, eps=self.eps)
         fdd_attacker.fit()
+        self.ts = self.ts.detach()
         adv_ts = fdd_attacker.attack(self.ts, self.label)
         eps = self.ts - adv_ts
-        assert abs(eps).max() < self.eps + 1e-10
+        assert abs(eps).max() < self.eps + 1e-6
     
     @pytest.mark.parametrize("attacker", fdd_attackers)
     def test_loading(self, attacker):
@@ -56,6 +58,7 @@ class TestOnSmallTEP:
         fdd_attacker.model.model.load_state_dict(
             torch.load('weights.pt', weights_only=True)
         )
+        self.ts = self.ts.detach()
         adv_ts = fdd_attacker.attack(self.ts, self.label)
         eps = self.ts - adv_ts
-        assert abs(eps).max() < self.eps + 1e-10
+        assert abs(eps).max() < self.eps + 1e-6

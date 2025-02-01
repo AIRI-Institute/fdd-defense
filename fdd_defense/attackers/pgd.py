@@ -1,6 +1,5 @@
-import numpy as np
 from fdd_defense.attackers.base import BaseAttacker
-
+import torch
 
 class PGDAttacker(BaseAttacker):
     def __init__(
@@ -15,9 +14,9 @@ class PGDAttacker(BaseAttacker):
     
     def attack(self, ts, label):
         super().attack(ts, label)
-        delta = np.zeros_like(ts)
+        delta = torch.zeros_like(ts)
         for _ in range(self.num_steps):
             grad = self.model.get_grad(ts + delta, label)
-            delta += self.alpha * np.sign(grad)
-            delta = np.clip(delta, a_min=-self.eps, a_max=self.eps)
+            delta += self.alpha * torch.sign(grad)
+            delta = torch.clip(delta, min=-self.eps, max=self.eps)
         return ts + delta

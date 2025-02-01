@@ -9,9 +9,7 @@ https://github.com/bethgelab/foolbox
 
 from fdd_defense.attackers.base import BaseAttacker
 import torch
-import torch.nn as nn
 from torch.optim import Adam
-import numpy as np
 from tqdm.auto import trange
 
 class CarliniWagnerAttacker(BaseAttacker):
@@ -33,10 +31,12 @@ class CarliniWagnerAttacker(BaseAttacker):
         self.num_steps = num_steps
         self.lr = lr
 
-    def attack(self, _ts: np.ndarray, label: np.ndarray) -> np.ndarray:
+    def attack(self, _ts, label):
         super().attack(_ts, label)
-        ts = torch.FloatTensor(_ts).to(self.model.device)
-        target = torch.LongTensor(label).to(self.model.device)
+        #ts = torch.FloatTensor(_ts).to(self.model.device)
+        #target = torch.LongTensor(label).to(self.model.device)
+        ts = _ts
+        target = label
         adv_ts = ts.clone()
         w = inverse_tanh_space(adv_ts, self.bounds)
         w.requires_grad = True
@@ -71,7 +71,7 @@ class CarliniWagnerAttacker(BaseAttacker):
                 best_adv_ts = mask*adv_ts + (1-mask)*best_adv_ts
 
         best_adv_ts = torch.clamp(best_adv_ts, min=ts-self.eps, max=ts+self.eps)
-        best_adv_ts = best_adv_ts.cpu().numpy()
+        best_adv_ts = best_adv_ts
         return best_adv_ts
 
 

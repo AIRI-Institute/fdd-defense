@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 from torch.optim import Adam
@@ -19,7 +18,7 @@ class BaseModel(ABC):
         pass
     
     @abstractmethod
-    def predict(self, ts: np.ndarray) -> np.ndarray:
+    def predict(self, ts):
         pass
 
 
@@ -45,8 +44,8 @@ class BaseTorchModel(BaseModel, ABC):
         for e in trange(self.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.dataloader, desc='Steps ...', leave=False):
-                label = torch.LongTensor(label).to(self.device)
-                ts = torch.FloatTensor(ts).to(self.device)
+                #label = torch.LongTensor(label).to(self.device)
+                #ts = torch.FloatTensor(ts).to(self.device)
                 logits = self.model(ts)
                 loss = self.loss_fn(logits, label)
                 self.optimizer.zero_grad()
@@ -57,14 +56,14 @@ class BaseTorchModel(BaseModel, ABC):
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
 
-    def predict(self, ts: np.ndarray) -> np.ndarray:
+    def predict(self, ts):
         super().predict(ts)
         self.model.eval()
         self.model.to(self.device)
         ts = torch.FloatTensor(ts).to(self.device)
         with torch.no_grad():
             logits = self.model(ts)
-        return logits.argmax(axis=1).cpu().numpy()
+        return logits.argmax(axis=1)
     
     def fit(self, dataset):
         num_sensors, num_states = dataset.df.shape[1], len(set(dataset.label))
@@ -94,19 +93,23 @@ class BaseTorchModel(BaseModel, ABC):
             use_minibatches=True,
             batch_size=self.batch_size,
             shuffle=True,
+            data_framework='torch',
+            device=self.device,
+            disable_index=True,
         )
 
     def __call__(self, ts: torch.Tensor):
         return self.model(ts)
 
-    def get_grad(self, ts: np.ndarray, label: np.ndarray) -> np.ndarray:
+    def get_grad(self, ts, label):
         self.model.train()
         self.model.to(self.device)
         self.model.zero_grad()
-        ts = torch.FloatTensor(ts).to(self.device)
-        label = torch.LongTensor(label).to(self.device)
+        #ts = torch.FloatTensor(ts).to(self.device)
+        #label = torch.LongTensor(label).to(self.device)
+        ts = ts.detach()
         ts.requires_grad = True
         logits = self.model(ts)
         loss = self.loss_fn(logits, label)
         loss.backward()
-        return ts.grad.data.cpu().numpy()
+        return ts.grad.data

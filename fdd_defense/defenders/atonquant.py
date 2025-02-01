@@ -1,4 +1,3 @@
-import numpy as np
 import random
 from fdd_defense.defenders.base import BaseDefender
 from fdd_defense.attackers import PGDAttacker
@@ -11,11 +10,11 @@ class ATQDefender(BaseDefender):
     def __init__(self, model, qbit=8, min=None, max=None):
         super().__init__(model)
         self.qbit = qbit
-        self.eps = np.linspace(1e-6, 0.3, 20)
+        self.eps = torch.linspace(1e-6, 0.3, 20)
         if min is None:
-            min = np.zeros(self.model.num_sensors)
+            min = torch.zeros(self.model.num_sensors)
         if max is None:
-            max = np.ones(self.model.num_sensors)
+            max = torch.ones(self.model.num_sensors)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         
@@ -30,9 +29,9 @@ class ATQDefender(BaseDefender):
                 attacker = PGDAttacker(self.model, eps=epsilon)
                 batch_size = ts.shape[0]
                 adv_ts = attacker.attack(ts, label)
-                label = torch.LongTensor(label).to(self.model.device)
-                ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
-                adv_ts = torch.FloatTensor(self.quantize(adv_ts)).to(self.model.device)
+                #label = torch.LongTensor(label).to(self.model.device)
+                #ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
+                #adv_ts = torch.FloatTensor(self.quantize(adv_ts)).to(self.model.device)
                 _ts = torch.cat([ts, adv_ts])
                 _logits = self.model.model(_ts)
                 logits = _logits[:batch_size]
@@ -48,14 +47,14 @@ class ATQDefender(BaseDefender):
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
         
-    def quantize(self, batch: np.ndarray):
+    def quantize(self, batch):
         scale = (self.max - self.min)
         scale[scale == 0] = 1
         batch_scaled = (batch - self.min) / scale
-        def_batch = np.floor(batch_scaled * 2**self.qbit) / 2**self.qbit
+        def_batch = torch.floor(batch_scaled * 2**self.qbit) / 2**self.qbit
         def_batch = def_batch * scale +  self.min
         return def_batch
 
-    def predict(self, batch: np.ndarray):
+    def predict(self, batch):
         def_batch = self.quantize(batch)
         return self.model.predict(def_batch)

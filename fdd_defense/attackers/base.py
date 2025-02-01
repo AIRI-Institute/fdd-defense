@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import numpy as np
 import copy
 
 class BaseAttacker(ABC):
@@ -33,7 +32,7 @@ class BaseAttacker(ABC):
         self.model = copy.deepcopy(model)
     
     @abstractmethod
-    def attack(self, ts: np.ndarray, label: np.ndarray) -> np.ndarray:
+    def attack(self, ts, label):
         """Attacks the data.
 
         Parameters

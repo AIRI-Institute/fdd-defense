@@ -1,6 +1,5 @@
 from fdd_defense.attackers.base import BaseAttacker
 import torch
-from tqdm.auto import trange
 
 class DeepFoolAttacker(BaseAttacker):
     def __init__(
@@ -13,8 +12,11 @@ class DeepFoolAttacker(BaseAttacker):
         self.num_steps = num_steps
     
     def attack(self, ts, label):
-        x = torch.FloatTensor(ts).to(self.model.device)
-        y = torch.LongTensor(label).to(self.model.device)
+        #x = torch.FloatTensor(ts).to(self.model.device)
+        #y = torch.LongTensor(label).to(self.model.device)
+
+        x = ts
+        y = label
 
         all_rows = range(len(x))
         x0 = x.clone()
@@ -47,4 +49,4 @@ class DeepFoolAttacker(BaseAttacker):
                 break
             r_final[correct_pred & in_limit] += r[correct_pred & in_limit]
             x = x0 + r_final
-        return x.detach().cpu().numpy()
+        return x.detach()

@@ -1,4 +1,3 @@
-import numpy as np
 from fdd_defense.models.base import BaseTorchModel
 from fdd_defense.defenders.base import BaseDefender
 from fdd_defense.utils import weight_reset
@@ -38,8 +37,9 @@ class DistillationDefender(BaseDefender):
         for e in trange(self.teacher.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, _label in tqdm(self.teacher.dataloader, desc='Steps ...', leave=False):
-                ts = torch.FloatTensor(ts).to(self.teacher.device)
-                label = F.one_hot(torch.LongTensor(_label), num_states).to(self.teacher.device)
+                #ts = torch.FloatTensor(ts).to(self.teacher.device)
+                #label = F.one_hot(torch.LongTensor(_label), num_states).to(self.teacher.device)
+                label = F.one_hot(_label, num_states)
                 logits = self.teacher.model(ts)
                 loss = loss_fn(logits, label)
                 optimizer.zero_grad()
@@ -70,5 +70,5 @@ class DistillationDefender(BaseDefender):
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
 
-    def predict(self, ts: np.ndarray):
+    def predict(self, ts):
         return self.model.predict(ts)

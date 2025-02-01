@@ -23,8 +23,8 @@ class RegularizationDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                label = torch.LongTensor(label).to(self.model.device)
-                ts = torch.FloatTensor(ts).to(self.model.device)
+                #label = torch.LongTensor(label).to(self.model.device)
+                #ts = torch.FloatTensor(ts).to(self.model.device)
                 loss = self.regularized_loss(ts, label)
                 self.model.optimizer.zero_grad()
                 loss.backward()

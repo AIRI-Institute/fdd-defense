@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 from torch.optim import Adam
@@ -111,9 +110,9 @@ class AutoEncoderDefender(BaseDefender, ABC):
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
         self.autoencoder.eval()
 
-    def predict(self, batch: np.ndarray):
+    def predict(self, batch):
         batch = torch.FloatTensor(batch).to(self.model.device)
         with torch.no_grad():
             def_batch = self.autoencoder(batch)
-        def_batch = def_batch.cpu().numpy()
+        def_batch = def_batch
         return self.model.predict(def_batch)
