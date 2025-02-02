@@ -13,10 +13,12 @@ class DistillationBlackBoxAttacker(BaseAttacker):
             student: object=None,
         ):
         super().__init__(model, eps)
+        self.teacher = self.model
+        self.student_to_train = False
         if student is None:
             student = model
+            self.student_to_train = True
         self.student = copy.deepcopy(student)
-        self.teacher = self.model
         self.attacker = FGSMAttacker(model=self.student, eps=self.eps)
     
     def attack(self, ts, label):
@@ -24,9 +26,9 @@ class DistillationBlackBoxAttacker(BaseAttacker):
         return adv_ts
 
     def fit(self):
-        self.student.fit(self.teacher.dataset)
+        if self.student_to_train:
+            self.student.fit(self.student.dataset)
         self.student.model.train()
-        self.student.model.to(self.teacher.device)
         self.optimizer = Adam(self.student.model.parameters(), lr=self.student.lr)
 
         for e in trange(self.student.num_epochs, desc='Epochs ...'):
