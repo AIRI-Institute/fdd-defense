@@ -17,6 +17,7 @@ class ATQDefender(BaseDefender):
             max = torch.ones(self.model.num_sensors, device=model.device)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
+        self.attacker = PGDAttacker(model, eps=0.1, num_steps=10)
         
     def fit(self):
         print('ATQ training...')
@@ -25,10 +26,10 @@ class ATQDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                epsilon = random.choice(self.eps)
-                attacker = PGDAttacker(self.model, eps=epsilon)
+                self.attacker.eps = random.choice(self.eps)
+                self.attacker.alpha = self.attacker.eps / self.attacker.num_steps
                 batch_size = ts.shape[0]
-                adv_ts = attacker.attack(ts, label)
+                adv_ts = self.attacker.attack(ts, label)
                 _ts = torch.cat([ts, adv_ts])
                 _logits = self.model.model(_ts)
                 logits = _logits[:batch_size]

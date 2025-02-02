@@ -19,7 +19,6 @@ class QuantizationDefender(BaseDefender):
     def fit(self):
         print('Quantization training...')
         self.model.model.apply(weight_reset)
-        self.optimizer = Adam(self.model.model.parameters(), lr=self.model.lr)
         self.model.model.train()
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
@@ -35,7 +34,7 @@ class QuantizationDefender(BaseDefender):
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
         
-    def quantize(self, batch: torch.Tensor):
+    def quantize(self, batch):
         scale = (self.max - self.min)
         scale[scale == 0] = 1
         batch_scaled = (batch - self.min) / scale
@@ -43,6 +42,6 @@ class QuantizationDefender(BaseDefender):
         def_batch = def_batch * scale + self.min
         return def_batch
 
-    def predict(self, batch: torch.Tensor):
+    def predict(self, batch):
         def_batch = self.quantize(batch)
         return self.model.predict(def_batch)
