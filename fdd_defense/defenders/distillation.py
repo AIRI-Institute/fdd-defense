@@ -37,8 +37,6 @@ class DistillationDefender(BaseDefender):
         for e in trange(self.teacher.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, _label in tqdm(self.teacher.dataloader, desc='Steps ...', leave=False):
-                #ts = torch.FloatTensor(ts).to(self.teacher.device)
-                #label = F.one_hot(torch.LongTensor(_label), num_states).to(self.teacher.device)
                 label = F.one_hot(_label, num_states)
                 logits = self.teacher.model(ts)
                 loss = loss_fn(logits, label)
@@ -56,7 +54,6 @@ class DistillationDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, _ in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                #ts = torch.FloatTensor(ts).to(self.model.device)
                 with torch.no_grad():
                     label = self.model.model(ts)
                 label = F.softmax(label, dim=1)

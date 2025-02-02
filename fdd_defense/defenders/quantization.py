@@ -24,8 +24,6 @@ class QuantizationDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                #label = torch.LongTensor(label).to(self.model.device)
-                #ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
                 ts = self.quantize(ts)
                 logits = self.model.model(ts)
                 loss = self.model.loss_fn(logits, label)

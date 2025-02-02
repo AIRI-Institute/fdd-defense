@@ -16,25 +16,23 @@ class DistillationBlackBoxAttacker(BaseAttacker):
         if student is None:
             student = model
         self.student = copy.deepcopy(student)
+        self.teacher = self.model
         self.attacker = FGSMAttacker(model=self.student, eps=self.eps)
     
     def attack(self, ts, label):
-        super().attack(ts, label)
         adv_ts = self.attacker.attack(ts, label)
         return adv_ts
 
     def fit(self):
-        self.student.fit(self.model.dataset)
+        self.student.fit(self.teacher.dataset)
         self.student.model.train()
-        self.student.model.to(self.model.device)
+        self.student.model.to(self.teacher.device)
         self.optimizer = Adam(self.student.model.parameters(), lr=self.student.lr)
 
         for e in trange(self.student.num_epochs, desc='Epochs ...'):
             losses = []
-            for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                #ts = torch.FloatTensor(ts)
-                label = self.model.predict(ts)
-                #label = torch.LongTensor(label).to(self.model.device)
+            for ts, _, label in tqdm(self.teacher.dataloader, desc='Steps ...', leave=False):
+                label = self.teacher.predict(ts)
                 logits = self.student.model(ts)
                 loss = self.student.loss_fn(logits, label)
                 self.optimizer.zero_grad()

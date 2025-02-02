@@ -10,7 +10,7 @@ fddmodels = [f[1] for f in getmembers(models, isclass)]
 
 class TestOnSmallTEP:
     def setup_class(self):
-        device = 'cpu'
+        device = 'mps'
         self.dataset = FDDDataset(name='small_tep')
         self.dataset.df[:] = minmax_scale(self.dataset.df)
         self.device = device

@@ -12,11 +12,9 @@ class DeepFoolAttacker(BaseAttacker):
         self.num_steps = num_steps
     
     def attack(self, ts, label):
-        #x = torch.FloatTensor(ts).to(self.model.device)
-        #y = torch.LongTensor(label).to(self.model.device)
 
-        x = ts
-        y = label
+        x = ts.clone()
+        y = label.clone()
 
         all_rows = range(len(x))
         x0 = x.clone()

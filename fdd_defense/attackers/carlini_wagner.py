@@ -31,11 +31,7 @@ class CarliniWagnerAttacker(BaseAttacker):
         self.num_steps = num_steps
         self.lr = lr
 
-    def attack(self, _ts, label):
-        super().attack(_ts, label)
-        #ts = torch.FloatTensor(_ts).to(self.model.device)
-        #target = torch.LongTensor(label).to(self.model.device)
-        ts = _ts
+    def attack(self, ts, label):
         target = label
         adv_ts = ts.clone()
         w = inverse_tanh_space(adv_ts, self.bounds)

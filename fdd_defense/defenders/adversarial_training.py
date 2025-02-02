@@ -24,9 +24,6 @@ class AdversarialTrainingDefender(BaseDefender):
             for ts, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
                 batch_size = ts.shape[0]
                 adv_ts = self.attacker.attack(ts, label)
-                #adv_ts = torch.FloatTensor(adv_ts).to(self.model.device)
-                #label = torch.LongTensor(label).to(self.model.device)
-                #ts = torch.FloatTensor(ts).to(self.model.device)
                 _ts = torch.cat([ts, adv_ts])
                 _logits = self.model.model(_ts)
                 logits = _logits[:batch_size]

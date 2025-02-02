@@ -57,10 +57,7 @@ class BaseTorchModel(BaseModel, ABC):
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
 
     def predict(self, ts):
-        super().predict(ts)
         self.model.eval()
-        self.model.to(self.device)
-        #ts = torch.FloatTensor(ts).to(self.device)
         with torch.no_grad():
             logits = self.model(ts)
         return logits.argmax(axis=1)
@@ -103,10 +100,7 @@ class BaseTorchModel(BaseModel, ABC):
 
     def get_grad(self, ts, label):
         self.model.train()
-        self.model.to(self.device)
         self.model.zero_grad()
-        #ts = torch.FloatTensor(ts).to(self.device)
-        #label = torch.LongTensor(label).to(self.device)
         ts = ts.detach()
         ts.requires_grad = True
         logits = self.model(ts)

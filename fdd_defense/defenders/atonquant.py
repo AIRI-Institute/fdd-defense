@@ -29,9 +29,6 @@ class ATQDefender(BaseDefender):
                 attacker = PGDAttacker(self.model, eps=epsilon)
                 batch_size = ts.shape[0]
                 adv_ts = attacker.attack(ts, label)
-                #label = torch.LongTensor(label).to(self.model.device)
-                #ts = torch.FloatTensor(self.quantize(ts)).to(self.model.device)
-                #adv_ts = torch.FloatTensor(self.quantize(adv_ts)).to(self.model.device)
                 _ts = torch.cat([ts, adv_ts])
                 _logits = self.model.model(_ts)
                 logits = _logits[:batch_size]

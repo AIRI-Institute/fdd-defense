@@ -13,7 +13,6 @@ class PGDAttacker(BaseAttacker):
         self.num_steps = num_steps
     
     def attack(self, ts, label):
-        super().attack(ts, label)
         delta = torch.zeros_like(ts)
         for _ in range(self.num_steps):
             grad = self.model.get_grad(ts + delta, label)
