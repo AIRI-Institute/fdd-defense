@@ -14,10 +14,10 @@ class DistillationBlackBoxAttacker(BaseAttacker):
         ):
         super().__init__(model, eps)
         self.teacher = self.model
-        self.student_to_train = False
+        self.student_to_train = True
         if student is None:
             student = model
-            self.student_to_train = True
+            self.student_to_train = False
         self.student = copy.deepcopy(student)
         self.attacker = FGSMAttacker(model=self.student, eps=self.eps)
     
