@@ -56,7 +56,7 @@ class DistillationDefender(BaseDefender):
         for e in trange(self.model.num_epochs, desc='Epochs ...'):
             losses = []
             for ts, _, _ in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                ts = torch.FloatTensor(ts).to(self.model.device)
+                #ts = torch.FloatTensor(ts).to(self.model.device)
                 with torch.no_grad():
                     label = self.model.model(ts)
                 label = F.softmax(label, dim=1)

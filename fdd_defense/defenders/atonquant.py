@@ -10,11 +10,11 @@ class ATQDefender(BaseDefender):
     def __init__(self, model, qbit=8, min=None, max=None):
         super().__init__(model)
         self.qbit = qbit
-        self.eps = torch.linspace(1e-6, 0.3, 20)
+        self.eps = torch.linspace(1e-6, 0.3, 20, device=model.device)
         if min is None:
-            min = torch.zeros(self.model.num_sensors)
+            min = torch.zeros(self.model.num_sensors, device=model.device)
         if max is None:
-            max = torch.ones(self.model.num_sensors)
+            max = torch.ones(self.model.num_sensors, device=model.device)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         

@@ -10,9 +10,9 @@ class QuantizationDefender(BaseDefender):
         super().__init__(model)
         self.qbit = qbit
         if min is None:
-            min = torch.zeros(self.model.num_sensors)
+            min = torch.zeros(model.num_sensors, device=model.device)
         if max is None:
-            max = torch.ones(self.model.num_sensors)
+            max = torch.ones(model.num_sensors, device=model.device)
         self.min = min[None, None, :]
         self.max = max[None, None, :]
         

@@ -10,8 +10,10 @@ fddmodels = [f[1] for f in getmembers(models, isclass)]
 
 class TestOnSmallTEP:
     def setup_class(self):
+        device = 'cpu'
         self.dataset = FDDDataset(name='small_tep')
         self.dataset.df[:] = minmax_scale(self.dataset.df)
+        self.device = device
         dataloader = FDDDataloader(
             dataframe=self.dataset.df,
             mask=self.dataset.train_mask,
@@ -21,6 +23,7 @@ class TestOnSmallTEP:
             use_minibatches=True, 
             batch_size=10,
             data_framework='torch',
+            device=device,
         )
         for ts, _, label in dataloader:
             break
@@ -30,7 +33,7 @@ class TestOnSmallTEP:
     @pytest.mark.parametrize("model", fddmodels)
     def test_base(self, model):
         torch.manual_seed(0)
-        fddmodel = model(window_size=10, step_size=1, is_test=True)
+        fddmodel = model(window_size=10, step_size=1, is_test=True, device=self.device)
         fddmodel.fit(self.dataset)
         pred = fddmodel.predict(self.ts)
         assert pred.shape == self.label.shape

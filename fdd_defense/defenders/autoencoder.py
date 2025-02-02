@@ -93,13 +93,15 @@ class AutoEncoderDefender(BaseDefender, ABC):
         for e in trange(self.num_epochs, desc='Epochs ...'):
             losses = []
             for batch, _, label in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
-                batch_ = torch.FloatTensor(batch).to(self.model.device)
+                #batch_ = torch.FloatTensor(batch).to(self.model.device)
+                batch_ = batch
                 rec_batch = self.autoencoder(batch_)
                 rec_loss = self.loss(rec_batch, batch_)
                 adv_loss = 0
                 if self.training_attacker is not None:
                     adv_batch = self.training_attacker.attack(batch, label)
-                    batch_ = torch.FloatTensor(adv_batch).to(self.model.device)
+                    #batch_ = torch.FloatTensor(adv_batch).to(self.model.device)
+                    batch_ = adv_batch
                     rec_batch = self.autoencoder(batch_)
                     adv_loss = self.loss(rec_batch, batch_)
                 loss = rec_loss + self.adv_coeff * adv_loss
@@ -107,11 +109,13 @@ class AutoEncoderDefender(BaseDefender, ABC):
                 loss.backward()
                 self.optimizer.step()
                 losses.append(loss.item())
+                if self.model.is_test:
+                    break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
         self.autoencoder.eval()
 
     def predict(self, batch):
-        batch = torch.FloatTensor(batch).to(self.model.device)
+        #batch = torch.FloatTensor(batch).to(self.model.device)
         with torch.no_grad():
             def_batch = self.autoencoder(batch)
         def_batch = def_batch

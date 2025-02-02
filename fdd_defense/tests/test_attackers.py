@@ -11,9 +11,11 @@ fdd_attackers = [f[1] for f in getmembers(attackers, isclass)]
 
 class TestOnSmallTEP:
     def setup_class(self):
+        device = 'cpu'
         self.dataset = FDDDataset(name='small_tep')
         self.dataset.df[:] = minmax_scale(self.dataset.df)
         self.eps = 0.01
+        self.device = device
         dataloader = FDDDataloader(
             dataframe=self.dataset.df,
             mask=self.dataset.train_mask,
@@ -23,6 +25,7 @@ class TestOnSmallTEP:
             use_minibatches=True, 
             batch_size=10,
             data_framework='torch',
+            device=device,
         )
         for ts, _, label in dataloader:
             break
@@ -33,7 +36,7 @@ class TestOnSmallTEP:
     def test_base(self, attacker):
         torch.manual_seed(0)
         np.random.seed(0)
-        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True, device=self.device)
         fddmodel.fit(self.dataset)
         fdd_attacker = attacker(fddmodel, eps=self.eps)
         fdd_attacker.fit()
@@ -46,12 +49,12 @@ class TestOnSmallTEP:
     def test_loading(self, attacker):
         torch.manual_seed(0)
         np.random.seed(0)
-        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True, device=self.device)
         fddmodel.fit(self.dataset)
         fdd_attacker = attacker(fddmodel, eps=self.eps)
         fdd_attacker.fit()
         torch.save(fdd_attacker.model.model.state_dict(), 'weights.pt')
-        fddmodel = MLP(window_size=10, step_size=1, is_test=True)
+        fddmodel = MLP(window_size=10, step_size=1, is_test=True, device=self.device)
         num_sensors, num_states = self.dataset.df.shape[1], len(set(self.dataset.label))
         fddmodel.create_model(num_sensors, num_states)
         fdd_attacker = attacker(fddmodel, eps=self.eps)

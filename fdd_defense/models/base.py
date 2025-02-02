@@ -60,7 +60,7 @@ class BaseTorchModel(BaseModel, ABC):
         super().predict(ts)
         self.model.eval()
         self.model.to(self.device)
-        ts = torch.FloatTensor(ts).to(self.device)
+        #ts = torch.FloatTensor(ts).to(self.device)
         with torch.no_grad():
             logits = self.model(ts)
         return logits.argmax(axis=1)
@@ -77,10 +77,10 @@ class BaseTorchModel(BaseModel, ABC):
         weight[1:] /= num_states
         self.loss_fn = nn.CrossEntropyLoss(weight=weight)
         self._create_model(num_sensors, num_states)
+        self.model.to(self.device)
 
     def prepare_training(self, dataset):
         self.model.train()
-        self.model.to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=self.lr)
 
         self.dataset = dataset
