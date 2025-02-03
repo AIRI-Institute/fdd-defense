@@ -12,10 +12,8 @@ class DeepFoolAttacker(BaseAttacker):
         self.num_steps = num_steps
     
     def attack(self, ts, label):
-
-        x = ts.clone()
-        y = label.clone()
-
+        x = ts
+        y = label
         all_rows = range(len(x))
         x0 = x.clone()
         r_final = torch.zeros_like(x)
@@ -26,7 +24,6 @@ class DeepFoolAttacker(BaseAttacker):
             dists = []
             for k in range(num_classes):
                 x.requires_grad = True
-                
                 logits = self.model.model(x)
                 delta = logits[:, k] - logits[all_rows, y]
                 delta.sum().backward()
