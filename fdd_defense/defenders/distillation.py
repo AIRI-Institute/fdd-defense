@@ -44,7 +44,7 @@ class DistillationDefender(BaseDefender):
                 loss.backward()
                 optimizer.step()
                 losses.append(loss.item())
-                if self.model.is_test:
+                if self.teacher.is_test:
                     break
             print(f'Epoch {e+1}, Loss: {sum(losses) / len(losses):.4f}')
 
@@ -55,7 +55,7 @@ class DistillationDefender(BaseDefender):
             losses = []
             for ts, _, _ in tqdm(self.model.dataloader, desc='Steps ...', leave=False):
                 with torch.no_grad():
-                    label = self.model.model(ts)
+                    label = self.teacher.model(ts)
                 label = F.softmax(label, dim=1)
                 logits = self.model.model(ts)
                 loss = loss_fn(logits, label)
