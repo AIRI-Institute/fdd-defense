@@ -6,7 +6,6 @@ class BaseDefender(ABC):
     @abstractmethod
     def __init__(self, model: object):
         self.model = copy.deepcopy(model)
-        pass
 
     def fit(self):
         pass
